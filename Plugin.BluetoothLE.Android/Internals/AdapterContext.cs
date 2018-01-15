@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using Android.Bluetooth;
 using Android.Bluetooth.LE;
-using Android.OS;
 using ScanMode = Android.Bluetooth.LE.ScanMode;
 
 
@@ -9,71 +12,110 @@ namespace Plugin.BluetoothLE.Internals
 {
     public class AdapterContext
     {
-        public GattCallbacks Callbacks { get; } = new GattCallbacks();
-
-
         readonly BluetoothManager manager;
-        LollipopScanCallback newCallback;
-        PreLollipopScanCallback oldCallback;
 
 
         public AdapterContext(BluetoothManager manager)
         {
             this.manager = manager;
+            this.Callbacks = new GattCallbacks();
             this.Devices = new DeviceManager(manager, this.Callbacks);
         }
 
 
+        public GattCallbacks Callbacks { get; }
         public DeviceManager Devices { get; }
-        public event EventHandler<ScanEventArgs> Scanned;
 
 
-        public void StartScan(ScanConfig config)
+        public IObservable<ScanResult> Scan(ScanConfig config)
         {
             this.Devices.Clear();
-            if (Build.VERSION.SdkInt >= BuildVersionCodes.Lollipop)
-            {
-                this.StartNewScanner(config);
-            }
-            else
-            {
-                this.StartPreLollipopScan();
-            }
+            var obs = CrossBleAdapter.AndroidUseNewScanner
+                ? this.NewScan(config)
+                : this.PreLollipopScan(config);
+
+            return obs;
         }
 
 
-        public void StopScan()
+        protected virtual IObservable<ScanResult> NewScan(ScanConfig config) => Observable.Create<ScanResult>(ob =>
         {
-            if (Build.VERSION.SdkInt >= BuildVersionCodes.Lollipop)
+            var cb = new LollipopScanCallback((native, rssi, sr) =>
             {
-                this.manager.Adapter?.BluetoothLeScanner?.StopScan(this.newCallback);
-            }
-            else
-            {
-                this.manager.Adapter?.StopLeScan(this.oldCallback);
-            }
-        }
-
-
-        protected virtual void StartNewScanner(ScanConfig config)
-        {
-            this.newCallback = new LollipopScanCallback(args => this.Scanned?.Invoke(this, args));
+                var scanResult = this.ToScanResult(native, rssi, new AdvertisementData(sr));
+                ob.OnNext(scanResult);
+            });
             var scanMode = this.ToNative(config.ScanType);
-            var filterBuilder = new ScanFilter.Builder();
-            if (config.ServiceUuid != null)
-                filterBuilder.SetServiceUuid(config.ServiceUuid.Value.ToParcelUuid());
 
-            //new ScanFilter.Builder().SetDeviceAddress().Set
+            var scanFilters = new List<ScanFilter>();
+            if (config.ServiceUuids != null && config.ServiceUuids.Count > 0)
+            {
+                foreach (var guid in config.ServiceUuids)
+                {
+                    var uuid = guid.ToParcelUuid();
+                    scanFilters.Add(new ScanFilter.Builder()
+                        .SetServiceUuid(uuid)
+                        .Build()
+                    );
+                }
+            }
+
             this.manager.Adapter.BluetoothLeScanner.StartScan(
-                new [] { filterBuilder.Build() },
+                scanFilters,
                 new ScanSettings
                     .Builder()
                     .SetScanMode(scanMode)
                     .Build(),
-                this.newCallback
+                cb
             );
+
+            return () => this.manager.Adapter.BluetoothLeScanner?.StopScan(cb);
+        });
+
+
+        protected virtual IObservable<ScanResult> PreLollipopScan(ScanConfig config) => Observable.Create<ScanResult>(ob =>
+        {
+            var cb = new PreLollipopScanCallback((native, rssi, sr) =>
+            {
+                var ad = new AdvertisementData(sr);
+                if (this.IsFiltered(ad, config))
+                {
+                    var scanResult = this.ToScanResult(native, rssi, ad);
+                    ob.OnNext(scanResult);
+                }
+            });
+            this.manager.Adapter.StartLeScan(cb);
+
+            return () => this.manager.Adapter.StopLeScan(cb);
+        });
+
+
+        protected bool IsFiltered(AdvertisementData ad, ScanConfig config)
+        {
+            if (config.ServiceUuids == null ||
+                !config.ServiceUuids.Any() ||
+                ad.ServiceUuids == null ||
+                !ad.ServiceUuids.Any())
+                return true;
+
+            foreach (var adUuid in ad.ServiceUuids)
+            {
+                foreach (var uuid in config.ServiceUuids)
+                {
+                    if (uuid.Equals(adUuid))
+                        return true;
+                }
+            }
+
+            return false;
         }
 
+        protected ScanResult ToScanResult(BluetoothDevice native, int rssi, IAdvertisementData ad)
+        {
+            var dev = this.Devices.GetDevice(native);
+            var result = new ScanResult(dev, rssi, ad);
+            return result;
+        }
 
 
         protected virtual ScanMode ToNative(BleScanType scanType)
@@ -93,14 +135,6 @@ namespace Plugin.BluetoothLE.Internals
                 default:
                     throw new ArgumentException("Invalid BleScanType");
             }
-        }
-
-
-        // TODO: scanfilter?
-        protected virtual void StartPreLollipopScan()
-        {
-            this.oldCallback = new PreLollipopScanCallback(args => this.Scanned?.Invoke(this, args));
-            this.manager.Adapter.StartLeScan(this.oldCallback);
         }
     }
 }

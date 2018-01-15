@@ -9,7 +9,7 @@ using GattStatus = Plugin.BluetoothLE.Server.GattStatus;
 
 namespace Plugin.BluetoothLE
 {
-    static class Extensions
+    public static class Extensions
     {
         public static Guid ToGuid(this byte[] uuidBytes)
         {

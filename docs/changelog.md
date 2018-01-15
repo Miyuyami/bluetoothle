@@ -1,10 +1,35 @@
 # CHANGE LOG
 
+## 5.3.2
+* [fix][android] fixes to locking mechanism as well as ability to disable it via CrossBleAdapter.AndroidDisableLockMechanism
+* [fix][ios] NRE in reconnection logic
+
+## 5.3.1
+* [fix][android] GetKnownCharacteristic now sync locks to prevent android race condition
+* [feature][android] configurable parameter to allow "breather" time between operations to prevent GATT issues
+
+## 5.3
+* [feature][android] Advertisement service UUID filtering for Pre-Lollipop
+* [fix][android] Fix issue with stopping scan when bluetooth adapter becomes disabled
+* [fix][android] Fix NRE with reconnection WhenServiceDiscovered
+* [fix][android] More improvements to race conditions
+* [BREAKING] Adapter.ScanListen has been removed
+
+## 5.2.2
+* [feature] push .NET standard 2.0
+* [feature] push to android 8 (forced nuget compile target - Android 4.3+ is still supported)
+* [fix][android] fix race conditions around semaphore cleanup
+
+## 5.2
+* [fix][android] more connection fixes to alleviate GATT 133
+* [fix][android] advertisement service UUIDs not parsing properly
+
 ## 5.1
 * [fix][android] rewritten connect/disconnect logic
 * [fix][android][ios] rewritten reconnection logic
 * [fix][android] kill more gatt133 errors by forcing synchronized communication (hidden to consumer)
 * [feature][android] Ability to use Android AutoConnect option on connect
+* [feature] scan for multiple UUIDs
 
 ## 5.0
 * [breaking][feature] SetNotificationValue has been replaced with EnableNotifications/DisableNotifications.

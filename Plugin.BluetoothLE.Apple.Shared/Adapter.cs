@@ -16,13 +16,13 @@ namespace Plugin.BluetoothLE
 {
     public class Adapter : AbstractAdapter
     {
-        readonly BleContext context;
+        readonly AdapterContext context;
         readonly Subject<bool> scanStatusChanged;
 
 
         public Adapter(BleAdapterConfiguration config = null)
         {
-            this.context = new BleContext(config);
+            this.context = new AdapterContext(config);
             this.scanStatusChanged = new Subject<bool>();
         }
 
@@ -123,22 +123,32 @@ namespace Plugin.BluetoothLE
             if (this.IsScanning)
                 throw new ArgumentException("There is already an existing scan");
 
-            if (config.ScanType == BleScanType.Background && config.ServiceUuid == null)
+            if (config.ScanType == BleScanType.Background && (config.ServiceUuids == null || config.ServiceUuids.Count == 0))
                 throw new ArgumentException("Background scan type set but not ServiceUUID");
 
             return Observable.Create<IScanResult>(ob =>
             {
                 this.context.Clear();
-                var scan = this.ScanListen().Subscribe(ob.OnNext);
+                var scan = this.context
+                    .ScanResultReceived
+                    .AsObservable()
+                    .Subscribe(ob.OnNext);
 
-                if (config.ServiceUuid == null)
+                if (config.ServiceUuids == null || config.ServiceUuids.Count == 0)
                 {
                     this.context.Manager.ScanForPeripherals(null, new PeripheralScanningOptions { AllowDuplicatesKey = true });
                 }
                 else
                 {
-                    var uuid = config.ServiceUuid.Value.ToCBUuid();
-                    this.context.Manager.ScanForPeripherals(uuid);
+                    var uuids = config.ServiceUuids.Select(o => o.ToCBUuid()).ToArray();
+                    if (config.ScanType == BleScanType.Background)
+                    {
+                        this.context.Manager.ScanForPeripherals(uuids);
+                    }
+                    else
+                    {
+                        this.context.Manager.ScanForPeripherals(uuids, new PeripheralScanningOptions { AllowDuplicatesKey = true });
+                    }
                 }
                 this.ToggleScanStatus(true);
 
@@ -149,14 +159,6 @@ namespace Plugin.BluetoothLE
                     this.ToggleScanStatus(false);
                 };
             });
-        }
-
-
-        IObservable<IScanResult> scanListenOb;
-        public override IObservable<IScanResult> ScanListen()
-        {
-            this.scanListenOb = this.scanListenOb ?? this.context.ScanResultReceived.AsObservable();
-            return this.scanListenOb;
         }
 
 
