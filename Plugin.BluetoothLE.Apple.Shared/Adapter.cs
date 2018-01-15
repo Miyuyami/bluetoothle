@@ -33,10 +33,10 @@ namespace Plugin.BluetoothLE
         {
             get
             {
-                var v8or9 = UIDevice.CurrentDevice.CheckSystemVersion(8, 0) && !UIDevice.CurrentDevice.CheckSystemVersion(10, 0);
+                var v8or9 = UIDevice.CurrentDevice.CheckSystemVersion(8, 0) && !UIDevice.CurrentDevice.CheckSystemVersion(9, 0);
                 return v8or9
-                    ? AdapterFeatures.OpenSettings
-                    : AdapterFeatures.None;
+                    ? AdapterFeatures.LowPoweredScan | AdapterFeatures.OpenSettings
+                    : AdapterFeatures.LowPoweredScan;
             }
         }
 #else
@@ -83,9 +83,9 @@ namespace Plugin.BluetoothLE
             return device;
         }
 
-
         public override IEnumerable<IDevice> GetPairedDevices() => new IDevice[0];
-        public override IEnumerable<IDevice> GetConnectedDevices() => this.context.GetConnectedDevices();
+        public override IEnumerable<IDevice> GetConnectedDevices(params Guid[] serviceGuids) =>
+            this.context.GetConnectedDevices(serviceGuids.Select(g => g.ToCBUuid()).ToArray());
 
 
         IObservable<AdapterStatus> statusOb;

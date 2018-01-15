@@ -43,7 +43,7 @@ namespace Plugin.BluetoothLE
         /// Gets a list of connected devices
         /// </summary>
         /// <returns></returns>
-        IEnumerable<IDevice> GetConnectedDevices();
+        IEnumerable<IDevice> GetConnectedDevices(Guid[] serviceGuids = null);
 
         /// <summary>
         /// Get the list of paired devices

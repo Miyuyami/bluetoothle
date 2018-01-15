@@ -56,7 +56,7 @@ namespace Plugin.BluetoothLE
                 .ToList();
 
 
-        public override IEnumerable<IDevice> GetConnectedDevices() =>
+        public override IEnumerable<IDevice> GetConnectedDevices(params Guid[] _) =>
             this.manager
                 .GetConnectedDevices(ProfileType.Gatt)
                 .Select(this.context.Devices.GetDevice);

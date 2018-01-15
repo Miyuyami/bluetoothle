@@ -86,7 +86,7 @@ namespace Plugin.BluetoothLE
                         }
                         else
                         {
-                            this.Value = this.NativeCharacteristic.Value?.ToArray();
+                            this.Value = this.NativeCharacteristic.Value.Bytes == IntPtr.Zero ? null : this.NativeCharacteristic.Value?.ToArray();
                             var result = new CharacteristicResult(this, CharacteristicEvent.Read, this.Value);
                             ob.Respond(result);
                             this.ReadSubject.OnNext(result);

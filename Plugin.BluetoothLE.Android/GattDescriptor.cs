@@ -83,7 +83,8 @@ namespace Plugin.BluetoothLE
                 );
                 return sub;
             })
-            .Synchronize(this.context.SyncLock);
+            .Synchronize(this.context.SyncLock)
+            ;
 
 
         bool NativeEquals(GattDescriptorEventArgs args)
@@ -100,7 +101,7 @@ namespace Plugin.BluetoothLE
             if (!this.native.Characteristic.Service.Uuid.Equals(args.Descriptor.Characteristic.Service.Uuid))
                 return false;
 
-            if (!this.context.Gatt.Equals(args.Gatt))
+            if (this.context.Gatt == null || !this.context.Gatt.Equals(args.Gatt))
                 return false;
 
             return true;

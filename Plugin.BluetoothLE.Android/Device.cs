@@ -180,7 +180,7 @@ namespace Plugin.BluetoothLE
                     .Subscribe(_ =>
                     {
                         Thread.Sleep(Convert.ToInt32(CrossBleAdapter.AndroidPauseBeforeServiceDiscovery.TotalMilliseconds)); // this helps alleviate gatt 133 error
-                        this.context.Gatt.DiscoverServices();
+                        this.context.Gatt?.DiscoverServices();
                     });
 
                 return () =>

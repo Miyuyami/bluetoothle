@@ -74,7 +74,8 @@ namespace Plugin.BluetoothLE
                 }
                 return sub;
             })
-            .Synchronize(this.context.SyncLock);
+            .Synchronize(this.context.SyncLock)
+            ;
 
 
         public override IObservable<CharacteristicResult> Read() => Observable
@@ -116,7 +117,8 @@ namespace Plugin.BluetoothLE
 
                 return sub;
             })
-            .Synchronize(this.context.SyncLock);
+            .Synchronize(this.context.SyncLock)
+            ;
 
 
         public override IObservable<bool> EnableNotifications(bool useIndicationsIfAvailable) => Observable
@@ -142,7 +144,8 @@ namespace Plugin.BluetoothLE
                 }
                 return success;
             })
-            .Synchronize(this.context.SyncLock);
+            .Synchronize(this.context.SyncLock)
+            ;
 
 
         public override IObservable<object> DisableNotifications() => Observable
@@ -165,7 +168,8 @@ namespace Plugin.BluetoothLE
                 }
                 return null;
             })
-            .Synchronize(this.context.SyncLock);
+            .Synchronize(this.context.SyncLock)
+            ;
 
 
         IObservable<CharacteristicResult> notifyOb;
@@ -247,7 +251,7 @@ namespace Plugin.BluetoothLE
             if (!this.native.Service.Uuid.Equals(args.Characteristic.Service.Uuid))
                 return false;
 
-            if (!this.context.Gatt.Equals(args.Gatt))
+            if (this.context.Gatt == null || !this.context.Gatt.Equals(args.Gatt))
                 return false;
 
             return true;
@@ -261,7 +265,8 @@ namespace Plugin.BluetoothLE
                 this.native.WriteType = GattWriteType.Default;
                 this.context.Gatt.WriteCharacteristic(this.native);
             })
-            .Synchronize(this.context.SyncLock);
+            .Synchronize(this.context.SyncLock)
+            ;
 
 
         IObservable<object> RawWriteNoResponse(IObserver<CharacteristicResult> ob, byte[] bytes)
@@ -283,6 +288,7 @@ namespace Plugin.BluetoothLE
                     ob?.OnError(ex);
                 }
             })
-            .Synchronize(this.context.SyncLock);
+            .Synchronize(this.context.SyncLock)
+            ;
     }
 }

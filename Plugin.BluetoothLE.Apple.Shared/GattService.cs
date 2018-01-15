@@ -23,7 +23,8 @@ namespace Plugin.BluetoothLE
         public override IObservable<IGattCharacteristic> GetKnownCharacteristics(params Guid[] characteristicIds)
             => Observable.Create<IGattCharacteristic>(ob =>
             {
-                var characteristics = new Dictionary<Guid, IGattCharacteristic>();
+                var characteristics = characteristicIds.Distinct().ToDictionary<Guid, Guid, IGattCharacteristic>(x => x, _ => null);
+
                 var handler = new EventHandler<CBServiceEventArgs>((sender, args) =>
                 {
                     if (this.Service.Characteristics == null)
@@ -35,13 +36,14 @@ namespace Plugin.BluetoothLE
                     foreach (var nch in this.Service.Characteristics)
                     {
                         var ch = new GattCharacteristic(this, nch);
-                        if (!characteristics.ContainsKey(ch.Uuid))
+                        if (characteristics.ContainsKey(ch.Uuid))
                         {
-                            characteristics.Add(ch.Uuid, ch);
+                            characteristics[ch.Uuid] = ch;
                             ob.OnNext(ch);
                         }
                     }
-                    if (characteristics.Count == characteristicIds.Length)
+
+                    if (!characteristics.Any(kvp => kvp.Value == null))
                         ob.OnCompleted();
                 });
                 var uuids = characteristicIds.Select(x => x.ToCBUuid()).ToArray();
