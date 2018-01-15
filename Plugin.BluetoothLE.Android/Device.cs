@@ -30,6 +30,8 @@ namespace Plugin.BluetoothLE
             this.connFailSubject = new Subject<GattStatus>();
             this.context = new DeviceContext(native, callbacks);
             this.manager = manager;
+
+            this.InitStatusChangedObservable();
         }
 
 
@@ -138,8 +140,8 @@ namespace Plugin.BluetoothLE
             .Select(x => this.Name);
 
 
-        IObservable<ConnectionStatus> statusOb;
-        public override IObservable<ConnectionStatus> WhenStatusChanged()
+        IConnectableObservable<ConnectionStatus> statusOb;
+        private void InitStatusChangedObservable()
         {
             this.statusOb = this.statusOb ?? Observable.Create<ConnectionStatus>(ob =>
             {
@@ -165,11 +167,47 @@ namespace Plugin.BluetoothLE
             })
             .StartWith(this.Status)
             .DistinctUntilChanged()
-            .Replay(1)
-            .RefCount();
+            .Replay(1);
 
+            this.statusOb.Connect();
+        }
+
+        public override IObservable<ConnectionStatus> WhenStatusChanged()
+        {
             return this.statusOb;
         }
+
+        //public override IObservable<ConnectionStatus> WhenStatusChanged()
+        //{
+        //    this.statusOb = this.statusOb ?? Observable.Create<ConnectionStatus>(ob =>
+        //    {
+        //        var sub1 = this.connSubject.Subscribe(ob.OnNext);
+        //        var sub2 = this.context
+        //            .Callbacks
+        //            .ConnectionStateChanged
+        //            .Where(args => args.Gatt.Device.Equals(this.context.NativeDevice))
+        //            .Subscribe(args =>
+        //            {
+        //                if (args.Status != GattStatus.Success)
+        //                    this.connFailSubject.OnNext(args.Status);
+
+        //                // if failed, likely no reason to broadcast this
+        //                ob.OnNext(this.Status);
+        //            });
+
+        //        return () =>
+        //        {
+        //            sub1.Dispose();
+        //            sub2.Dispose();
+        //        };
+        //    })
+        //    .StartWith(this.Status)
+        //    .DistinctUntilChanged()
+        //    .Replay(1)
+        //    .RefCount();
+
+        //    return this.statusOb;
+        //}
 
 
         IObservable<IGattService> serviceOb;
