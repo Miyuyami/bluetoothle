@@ -383,6 +383,7 @@ namespace Plugin.BluetoothLE
 
                 var sub2 = this.WhenMtuChanged()
                     .Take(1)
+                    .Delay(TimeSpan.FromMilliseconds(500d))
                     .Subscribe(ob.Respond);
 
                 return () =>
