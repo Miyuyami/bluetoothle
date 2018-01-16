@@ -105,7 +105,10 @@ namespace Plugin.BluetoothLE
             {
                 try
                 {
-                    this.context.Gatt.ReadCharacteristic(this.native);
+                    if (!this.context.Gatt.ReadCharacteristic(this.native))
+                    {
+                        ob.OnError(new Exception($"Failed to read characteristic."));
+                    }
                 }
                 catch (Exception ex)
                 {

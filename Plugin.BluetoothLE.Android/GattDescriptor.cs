@@ -75,7 +75,20 @@ namespace Plugin.BluetoothLE
                     }
                 });
 
-            await this.context.Marshall(() => this.context.Gatt.ReadDescriptor(this.native));
+            await this.context.Marshall(() =>
+            {
+                try
+                {
+                    if (!this.context.Gatt.ReadDescriptor(this.native))
+                    {
+                        ob.OnError(new Exception($"Failed to read descriptor."));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ob.OnError(ex);
+                }
+            });
 
             return sub;
         }));
