@@ -43,10 +43,10 @@ namespace Plugin.BluetoothLE
                         }
                     }
 
-                    if (!characteristics.Any(kvp => kvp.Value == null))
+                    if (characteristics.All(kvp => kvp.Value != null))
                         ob.OnCompleted();
                 });
-                var uuids = characteristicIds.Select(x => x.ToCBUuid()).ToArray();
+                var uuids = characteristics.Select(kvp => kvp.Key.ToCBUuid()).ToArray();
                 this.Peripherial.DiscoveredCharacteristic += handler;
                 this.Peripherial.DiscoverCharacteristics(uuids, this.Service);
 
