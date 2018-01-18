@@ -85,7 +85,7 @@ namespace Plugin.BluetoothLE
 
         public override IEnumerable<IDevice> GetPairedDevices() => new IDevice[0];
         public override IEnumerable<IDevice> GetConnectedDevices(params Guid[] serviceGuids) =>
-            this.context.GetConnectedDevices(serviceGuids.Select(g => g.ToCBUuid()).ToArray());
+            this.context.GetConnectedDevices(serviceGuids.Distinct().Select(g => g.ToCBUuid()).ToArray());
 
 
         IObservable<AdapterStatus> statusOb;

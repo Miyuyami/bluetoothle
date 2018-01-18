@@ -23,6 +23,6 @@ namespace Plugin.BluetoothLE
 
         public virtual string Description => Dictionaries.GetServiceDescription(this.Uuid);
         public virtual IObservable<IGattCharacteristic> GetKnownCharacteristics(params Guid[] characteristicIds)
-            => this.WhenCharacteristicDiscovered().Where(x => characteristicIds.Any(y => y == x.Uuid));
+            => this.WhenCharacteristicDiscovered().Where(x => characteristicIds.Distinct().Any(y => y == x.Uuid));
     }
 }

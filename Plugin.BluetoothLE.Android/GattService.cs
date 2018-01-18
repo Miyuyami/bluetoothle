@@ -47,11 +47,11 @@ namespace Plugin.BluetoothLE
         public override IObservable<IGattCharacteristic> GetKnownCharacteristics(params Guid[] characteristicIds)
             => this.context.Lock(Observable.Create<IGattCharacteristic>(ob =>
             {
-                var cids = characteristicIds.Select(x => x.ToUuid()).ToArray();
-                foreach (var cid in cids)
+                var uuids = characteristicIds.Distinct().Select(x => x.ToUuid()).ToArray();
+                foreach (var uuid in uuids)
                 {
-                    var cs = this.native.GetCharacteristic(cid);
-                    var characteristic = new GattCharacteristic(this, this.context, cs);
+                    var nc = this.native.GetCharacteristic(uuid);
+                    var characteristic = new GattCharacteristic(this, this.context, nc);
                     ob.OnNext(characteristic);
                 }
                 ob.OnCompleted();

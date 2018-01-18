@@ -46,8 +46,9 @@ namespace Plugin.BluetoothLE
         //    )
         //    .Select(x => x.Value);
 
-        public IEnumerable<IDevice> GetConnectedDevices(params CBUUID[] serviceUUIDs) => this.Manager.RetrieveConnectedPeripherals(serviceUUIDs)
-            .Select(p => this.GetDevice(p));
+        public IEnumerable<IDevice> GetConnectedDevices(params CBUUID[] serviceUUIDs) =>
+            this.Manager.RetrieveConnectedPeripherals(serviceUUIDs.Distinct().ToArray())
+                        .Select(p => this.GetDevice(p));
             //.Where(x =>
             //    x.Status == ConnectionStatus.Connected ||
             //    x.Status == ConnectionStatus.Connecting

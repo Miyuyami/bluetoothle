@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reactive.Linq;
 
 
@@ -7,11 +8,13 @@ namespace Plugin.BluetoothLE
     public static partial class Extensions
     {
         public static IObservable<IGattCharacteristic> GetKnownCharacteristics(this IDevice device, Guid serviceUuid, params Guid[] characteristicIds)
-            => device
-                .GetKnownService(serviceUuid)
-                .SelectMany(x => x.GetKnownCharacteristics(characteristicIds))
-                .Take(characteristicIds.Length);
+        {
+            var distinctCharacteristicIds = characteristicIds.Distinct().ToArray();
 
+            return device.GetKnownService(serviceUuid)
+                         .SelectMany(x => x.GetKnownCharacteristics(distinctCharacteristicIds))
+                         .Take(distinctCharacteristicIds.Length);
+        }
 
         public static IObservable<IGattCharacteristic> WhenAnyCharacteristicDiscovered(this IDevice device)
             => device.WhenServiceDiscovered().SelectMany(x => x.WhenCharacteristicDiscovered());
