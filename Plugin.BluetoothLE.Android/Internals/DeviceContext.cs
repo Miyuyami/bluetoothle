@@ -53,7 +53,9 @@ namespace Plugin.BluetoothLE.Internals
                     if (CrossBleAdapter.AndroidOperationPause != null)
                         System.Threading.Thread.Sleep(CrossBleAdapter.AndroidOperationPause.Value);
 
-                    sub = inner.Subscribe(
+                    sub = inner
+                        .Timeout(TimeSpan.FromSeconds(2d))
+                        .Subscribe(
                         ob.OnNext,
                         ex =>
                         {
