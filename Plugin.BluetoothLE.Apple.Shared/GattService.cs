@@ -30,7 +30,7 @@ namespace Plugin.BluetoothLE
                     if (this.Service.Characteristics == null)
                         return;
 
-                    if (!this.Equals(args.Service))
+                    if (!this.ServiceEquals(args.Service))
                         return;
 
                     foreach (var nch in this.Service.Characteristics)
@@ -65,7 +65,7 @@ namespace Plugin.BluetoothLE
                     if (this.Service.Characteristics == null)
                         return;
 
-                    if (!this.Equals(args.Service))
+                    if (!this.ServiceEquals(args.Service))
                         return;
 
                     foreach (var nch in this.Service.Characteristics)
@@ -83,14 +83,17 @@ namespace Plugin.BluetoothLE
 
                 return () => this.Peripherial.DiscoveredCharacteristic -= handler;
             })
-            .Replay()
+            .ReplayWithReset(this.Device
+                .WhenStatusChanged()
+                .Where(s => s == ConnectionStatus.Disconnected)
+            )
             .RefCount();
 
             return this.characteristicOb;
         }
 
 
-        bool Equals(CBService service)
+        bool ServiceEquals(CBService service)
         {
             if (!this.Service.UUID.Equals(service.UUID))
                 return false;
@@ -108,7 +111,7 @@ namespace Plugin.BluetoothLE
             if (other == null)
                 return false;
 
-			if (!Object.ReferenceEquals(this, other))
+			if (!ReferenceEquals(this, other))
                 return false;
 
             return true;

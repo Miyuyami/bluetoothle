@@ -1,11 +1,10 @@
-﻿using System;
+﻿using CoreBluetooth;
+using Foundation;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using CoreBluetooth;
-using Foundation;
+using System.Reactive.Subjects;
 
 
 namespace Plugin.BluetoothLE
@@ -21,6 +20,8 @@ namespace Plugin.BluetoothLE
         {
             this.context = context;
             this.peripheral = peripheral;
+
+            this.InitStatusChangedObservable();
         }
 
 
@@ -124,8 +125,8 @@ namespace Plugin.BluetoothLE
         }
 
 
-        IObservable<ConnectionStatus> statusOb;
-        public override IObservable<ConnectionStatus> WhenStatusChanged()
+        IConnectableObservable<ConnectionStatus> statusOb;
+        private void InitStatusChangedObservable()
         {
             this.statusOb = this.statusOb ?? Observable.Create<ConnectionStatus>(ob =>
             {
@@ -147,9 +148,13 @@ namespace Plugin.BluetoothLE
                     sub2.Dispose();
                 };
             })
-            .Replay(1)
-            .RefCount();
+            .Replay(1);
 
+            this.statusOb.Connect();
+        }
+
+        public override IObservable<ConnectionStatus> WhenStatusChanged()
+        {
             return this.statusOb;
         }
 
@@ -223,7 +228,7 @@ namespace Plugin.BluetoothLE
             })
             .ReplayWithReset(this
                 .WhenStatusChanged()
-                .Skip(1)
+                //.Skip(1)
                 .Where(x => x == ConnectionStatus.Disconnected)
             )
             .RefCount();

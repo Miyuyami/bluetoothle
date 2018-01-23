@@ -148,14 +148,14 @@ namespace Plugin.BluetoothLE.Internals
 
         void CreateGatt(bool autoConnect)
         {
+            if (true || Build.VERSION.SdkInt >= BuildVersionCodes.N)
+            {
+                this.Gatt = this.ConnectGattCompat(autoConnect);
+                return;
+            }
+
             try
             {
-                if (Build.VERSION.SdkInt >= BuildVersionCodes.N)
-                {
-                    this.Gatt = this.ConnectGattCompat(autoConnect);
-                    return;
-                }
-
                 var bmMethod = BluetoothAdapter.DefaultAdapter.Class.GetDeclaredMethod("getBluetoothManager");
                 bmMethod.Accessible = true;
                 var bluetoothManager = bmMethod.Invoke(BluetoothAdapter.DefaultAdapter);
@@ -178,14 +178,15 @@ namespace Plugin.BluetoothLE.Internals
                     this.Gatt = this.ConnectGattCompat(autoConnect);
                     return;
                 }
-
-                this.Gatt = bluetoothGatt;
-                var connectSuccess = this.ConnectUsingReflection(this.Gatt, true);
+                
+                var connectSuccess = this.ConnectUsingReflection(bluetoothGatt, true);
                 if (!connectSuccess)
                 {
                     Log.Error("Device", "Unable to connect using reflection method");
-                    this.Gatt?.Close();
+                    bluetoothGatt?.Close();
                 }
+
+                this.Gatt = bluetoothGatt;
             }
             catch (Exception ex)
             {

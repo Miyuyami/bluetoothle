@@ -7,18 +7,21 @@ using Foundation;
 
 namespace Plugin.BluetoothLE
 {
+    // TODO: probably this also needs ReplayWithReset for discovering the Descriptors
+    // and also to use the args from the event instead of local instance
+    // (like in GattService)
     public class GattCharacteristic : AbstractGattCharacteristic
     {
-        readonly GattService serivceObj;
-        public CBPeripheral Peripheral => this.serivceObj.Peripherial;
-        public CBService NativeService => this.serivceObj.Service;
+        readonly GattService serviceObj;
+        public CBPeripheral Peripheral => this.serviceObj.Peripherial;
+        public CBService NativeService => this.serviceObj.Service;
         public CBCharacteristic NativeCharacteristic { get; }
 
 
         public GattCharacteristic(GattService service, CBCharacteristic native)
                 : base(service, native.UUID.ToGuid(), (CharacteristicProperties)(int)native.Properties)
         {
-            this.serivceObj = service;
+            this.serviceObj = service;
             this.NativeCharacteristic = native;
         }
 

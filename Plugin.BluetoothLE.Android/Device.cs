@@ -1,3 +1,6 @@
+using Android.Bluetooth;
+using Android.OS;
+using Plugin.BluetoothLE.Internals;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -5,9 +8,6 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
-using Android.Bluetooth;
-using Android.OS;
-using Plugin.BluetoothLE.Internals;
 
 
 namespace Plugin.BluetoothLE
@@ -155,7 +155,6 @@ namespace Plugin.BluetoothLE
                         if (args.Status != GattStatus.Success)
                             this.connFailSubject.OnNext(args.Status);
 
-                        // if failed, likely no reason to broadcast this
                         ob.OnNext(this.Status);
                     });
 
